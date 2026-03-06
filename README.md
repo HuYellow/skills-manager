@@ -20,12 +20,14 @@
 
 ## Default Supported IDEs (Alphabetical Order)
 
-- Antigravity: `.agent/skills`
-- Claude: `.claude/skills`
+- Antigravity: `.gemini/antigravity/skills`
+- Claude Code: `.claude/skills`
 - CodeBuddy: `.codebuddy/skills`
 - Codex: `.codex/skills`
 - Cursor: `.cursor/skills`
 - Kiro: `.kiro/skills`
+- OpenClaw: `.openclaw/skills`
+- OpenCode: `.config/opencode/skills`
 - Qoder: `.qoder/skills`
 - Trae: `.trae/skills`
 - VSCode: `.github/skills`
