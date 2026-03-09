@@ -19,9 +19,7 @@ pub fn is_safe_relative_dir(rel: &str) -> bool {
 }
 
 pub fn is_within_directory(base: &Path, target: &Path) -> bool {
-    let canonical_base = base
-        .canonicalize()
-        .unwrap_or_else(|_| base.to_path_buf());
+    let canonical_base = base.canonicalize().unwrap_or_else(|_| base.to_path_buf());
 
     let normalized_target = target.components().fold(PathBuf::new(), |mut acc, part| {
         if part == Component::ParentDir {

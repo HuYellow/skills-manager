@@ -2,9 +2,7 @@ mod commands;
 mod types;
 mod utils;
 
-use commands::market::{
-    download_marketplace_skill, search_marketplaces, update_marketplace_skill,
-};
+use commands::market::{download_marketplace_skill, search_marketplaces, update_marketplace_skill};
 use commands::skills::{
     adopt_ide_skill, delete_local_skills, import_local_skill, link_local_skill, scan_overview,
     uninstall_skill,

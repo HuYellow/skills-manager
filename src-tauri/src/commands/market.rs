@@ -64,14 +64,17 @@ fn parse_skillsllm(
     let mut skills = Vec::new();
     if let Some(items) = list {
         for item in items {
-            let github_owner = get_value_string(item, &["githubOwner", "github_owner", "owner", "repoOwner"]);
-            let github_repo = get_value_string(item, &["githubRepo", "github_repo", "repo", "repoName"]);
-            let source_url = get_value_string(item, &["githubUrl", "sourceUrl", "source_url", "repoUrl"])
-                .or_else(|| match (github_owner.as_deref(), github_repo.as_deref()) {
-                    (Some(o), Some(r)) => Some(build_github_source_url(o, r)),
-                    _ => None,
-                })
-                .unwrap_or_default();
+            let github_owner =
+                get_value_string(item, &["githubOwner", "github_owner", "owner", "repoOwner"]);
+            let github_repo =
+                get_value_string(item, &["githubRepo", "github_repo", "repo", "repoName"]);
+            let source_url =
+                get_value_string(item, &["githubUrl", "sourceUrl", "source_url", "repoUrl"])
+                    .or_else(|| match (github_owner.as_deref(), github_repo.as_deref()) {
+                        (Some(o), Some(r)) => Some(build_github_source_url(o, r)),
+                        _ => None,
+                    })
+                    .unwrap_or_default();
 
             let name = get_value_string(item, &["name", "title"])
                 .or_else(|| github_repo.clone())
@@ -281,7 +284,7 @@ pub async fn search_marketplaces(
         } else {
             format!("q={}", urlencoding::encode(trimmed))
         };
-        
+
         let limit = if limit == 0 { 20 } else { limit };
 
         let claude_market_id = "claude-plugins";

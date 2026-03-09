@@ -56,11 +56,16 @@ pub fn download_skill_to_dir(
     }
 
     let zip_url = if source_url.starts_with("https://github.com/") {
-        let parts: Vec<&str> = source_url["https://github.com/".len()..].split('/').collect();
+        let parts: Vec<&str> = source_url["https://github.com/".len()..]
+            .split('/')
+            .collect();
         if parts.len() >= 2 {
             let owner = parts[0];
             let repo = parts[1].strip_suffix(".git").unwrap_or(parts[1]);
-            format!("https://api.github.com/repos/{}/{}/zipball/HEAD", owner, repo)
+            format!(
+                "https://api.github.com/repos/{}/{}/zipball/HEAD",
+                owner, repo
+            )
         } else {
             source_url.to_string()
         }
@@ -152,10 +157,11 @@ pub fn extract_zip(buf: &[u8], extract_dir: &Path) -> Result<(), String> {
             fs::create_dir_all(parent).map_err(|err| err.to_string())?;
         }
         let mut outfile = fs::File::create(&out_path).map_err(|err| err.to_string())?;
-        
+
         // 防御 Zip Bomb: 每个文件最多解压 100MB
         const MAX_FILE_SIZE: u64 = 100 * 1024 * 1024;
-        std::io::copy(&mut file.take(MAX_FILE_SIZE), &mut outfile).map_err(|err| err.to_string())?;
+        std::io::copy(&mut file.take(MAX_FILE_SIZE), &mut outfile)
+            .map_err(|err| err.to_string())?;
     }
 
     Ok(())
