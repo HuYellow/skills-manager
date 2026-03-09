@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.15](https://github.com/Rito-w/skills-manager/compare/v0.3.14...v0.3.15) (2026-03-10)
+
+### Bug Fixes
+
+* fix macOS ENOTDIR when adopting a symlinked IDE skill by removing symlink paths safely
+
 ### [0.3.14](https://github.com/Rito-w/skills-manager/compare/v0.3.13...v0.3.14) (2026-03-09)
 
 ### Bug Fixes

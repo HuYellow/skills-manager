@@ -180,11 +180,11 @@ fn collect_ide_skills(
 fn remove_path(path: &Path) -> Result<(), String> {
     let metadata = fs::symlink_metadata(path).map_err(|err| err.to_string())?;
     if metadata.file_type().is_symlink() {
-        if path.is_dir() {
-            fs::remove_dir(path).map_err(|err| err.to_string())
-        } else {
-            fs::remove_file(path).map_err(|err| err.to_string())
-        }
+        // `path.is_dir()` follows symlinks and may report true for a symlink-to-dir.
+        // Removing such a symlink with `remove_dir` triggers ENOTDIR on macOS.
+        fs::remove_file(path)
+            .or_else(|_| fs::remove_dir(path))
+            .map_err(|err| err.to_string())
     } else if metadata.is_dir() {
         fs::remove_dir_all(path).map_err(|err| err.to_string())
     } else {
