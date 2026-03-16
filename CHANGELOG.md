@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.19](https://github.com/Rito-w/skills-manager/compare/v0.3.18...v0.3.19) (2026-03-16)
+
+
+### Bug Fixes
+
+* resolve duplicate version info and prevent multi-instance on Windows ([0a8c356](https://github.com/Rito-w/skills-manager/commit/0a8c35668693bc1e83380fd7840e40d9c0176581)), closes [#10](https://github.com/Rito-w/skills-manager/issues/10) [#11](https://github.com/Rito-w/skills-manager/issues/11)
+
 ### [0.3.18](https://github.com/Rito-w/skills-manager/compare/v0.3.16...v0.3.18) (2026-03-11)
 
 
