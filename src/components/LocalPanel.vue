@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import type { LocalSkill, DownloadTask, IdeOption } from "../composables/types";
 import DownloadQueue from "./DownloadQueue.vue";
 import { useI18n } from "vue-i18n";
+import { normalizeSkillName } from "../composables/utils";
 
 const { t } = useI18n();
 
@@ -31,9 +32,13 @@ const searchQuery = ref("");
 const filteredLocalSkills = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase();
   if (!keyword) return props.localSkills;
+  const normalizedKeyword = normalizeSkillName(keyword);
   return props.localSkills.filter((skill) => {
     const haystacks = [skill.name, skill.description, skill.path];
-    return haystacks.some((value) => value.toLowerCase().includes(keyword));
+    return haystacks.some((value) => {
+      const lowered = value.toLowerCase();
+      return lowered.includes(keyword) || normalizeSkillName(value).includes(normalizedKeyword);
+    });
   });
 });
 

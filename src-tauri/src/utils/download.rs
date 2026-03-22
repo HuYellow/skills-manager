@@ -7,6 +7,23 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
+fn normalize_name_for_match(input: &str) -> String {
+    input
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() {
+                ch.to_ascii_lowercase()
+            } else {
+                '-'
+            }
+        })
+        .collect::<String>()
+        .split('-')
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
+}
+
 pub fn download_bytes(url: &str, headers: &[(&str, &str)]) -> Result<Vec<u8>, String> {
     let agent = ureq::AgentBuilder::new()
         .redirects(5)
@@ -194,7 +211,9 @@ pub fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<(), String> {
 
 fn find_skill_root(extract_dir: &Path, expected: &str) -> Result<PathBuf, String> {
     let mut candidates: Vec<PathBuf> = Vec::new();
-    for entry in WalkDir::new(extract_dir).max_depth(5) {
+    // Some marketplace repos are plugin monorepos where the real skill sits
+    // several levels below the extracted archive root.
+    for entry in WalkDir::new(extract_dir).max_depth(12) {
         let entry = entry.map_err(|err| err.to_string())?;
         if entry.file_type().is_file() && entry.file_name() == "SKILL.md" {
             if let Some(parent) = entry.path().parent() {
@@ -207,15 +226,47 @@ fn find_skill_root(extract_dir: &Path, expected: &str) -> Result<PathBuf, String
         return Ok(extract_dir.to_path_buf());
     }
 
-    let expected_lower = expected.to_ascii_lowercase();
-    if let Some(best) = candidates.iter().find(|path| {
-        path.file_name()
-            .and_then(|name| name.to_str())
-            .map(|name| name.to_ascii_lowercase() == expected_lower)
-            .unwrap_or(false)
-    }) {
-        return Ok(best.clone());
-    }
+    let expected_normalized = normalize_name_for_match(expected);
 
-    Ok(candidates[0].clone())
+    let mut ranked: Vec<(usize, usize, PathBuf)> = candidates
+        .into_iter()
+        .map(|path| {
+            let components: Vec<String> = path
+                .components()
+                .filter_map(|component| component.as_os_str().to_str())
+                .map(normalize_name_for_match)
+                .filter(|component| !component.is_empty())
+                .collect();
+
+            let file_name = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .map(normalize_name_for_match)
+                .unwrap_or_default();
+
+            let rank = if file_name == expected_normalized {
+                0
+            } else if components.iter().any(|component| component == &expected_normalized) {
+                1
+            } else if components
+                .iter()
+                .any(|component| component.contains(&expected_normalized))
+            {
+                2
+            } else {
+                3
+            };
+
+            let depth = components.len();
+            (rank, depth, path)
+        })
+        .collect();
+
+    ranked.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)));
+
+    Ok(ranked
+        .into_iter()
+        .next()
+        .map(|(_, _, path)| path)
+        .unwrap_or_else(|| extract_dir.to_path_buf()))
 }

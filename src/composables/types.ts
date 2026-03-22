@@ -95,6 +95,8 @@ export type DownloadTask = {
   error?: string;
 };
 
+export type MarketSortMode = "default" | "stars_desc" | "installs_desc";
+
 /**
  * IDE directory in a project
  */

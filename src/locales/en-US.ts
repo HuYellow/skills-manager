@@ -70,7 +70,12 @@ export default {
     updating: "Updating...",
     source: "Source: {source}",
     loadMore: "Load More",
-    unavailable: "Unavailable"
+    unavailable: "Unavailable",
+    sortLabel: "Sort",
+    sortDefault: "Default order",
+    sortStars: "Stars: High to Low",
+    sortInstalls: "Installs: High to Low",
+    sortHint: "Sorting applies to currently loaded results"
   },
   local: {
     title: "Local Skills",

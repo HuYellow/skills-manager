@@ -70,7 +70,12 @@ export default {
     queued: "排队中",
     unavailable: "暂不可用",
     source: "来源：{source}",
-    loadMore: "加载更多"
+    loadMore: "加载更多",
+    sortLabel: "排序",
+    sortDefault: "默认顺序",
+    sortStars: "星数从高到低",
+    sortInstalls: "安装量从高到低",
+    sortHint: "基于当前已加载结果排序"
   },
   local: {
     title: "已有 Skills",
