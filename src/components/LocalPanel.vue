@@ -18,6 +18,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "install", skill: LocalSkill): void;
   (e: "installMany", skills: LocalSkill[]): void;
+  (e: "exportLocal", skills: LocalSkill[]): void;
   (e: "deleteLocal", skills: LocalSkill[]): void;
   (e: "openDir", path: string): void;
   (e: "refresh"): void;
@@ -88,6 +89,11 @@ function installSelected() {
   emit("installMany", selectedSkills.value);
 }
 
+function exportSelected() {
+  if (selectedSkills.value.length === 0) return;
+  emit("exportLocal", selectedSkills.value);
+}
+
 function deleteSelected() {
   if (selectedSkills.value.length === 0) return;
   emit("deleteLocal", selectedSkills.value);
@@ -130,6 +136,9 @@ function deleteSelected() {
         </button>
         <button class="ghost" :disabled="selectedSkills.length === 0 || localLoading" @click="installSelected">
           {{ t("local.installSelected", { count: selectedSkills.length }) }}
+        </button>
+        <button class="ghost" :disabled="selectedSkills.length === 0 || localLoading" @click="exportSelected">
+          {{ t("local.exportSelected", { count: selectedSkills.length }) }}
         </button>
         <button class="ghost danger" :disabled="selectedSkills.length === 0 || localLoading" @click="deleteSelected">
           {{ t("local.deleteSelected", { count: selectedSkills.length }) }}
@@ -184,6 +193,9 @@ function deleteSelected() {
             </button>
             <button class="ghost" @click="$emit('openDir', skill.path)">
               {{ t("local.openDir") }}
+            </button>
+            <button class="ghost" @click="$emit('exportLocal', [skill])">
+              {{ t("local.exportOne") }}
             </button>
             <button class="ghost danger" @click="$emit('deleteLocal', [skill])">
               {{ t("local.deleteOne") }}
