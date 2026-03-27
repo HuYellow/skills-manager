@@ -6,7 +6,7 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useToast } from "./useToast";
 import type {
   RemoteSkill, MarketStatus, InstallResult, LocalSkill,
-  IdeSkill, Overview, LinkTarget, DownloadTask, ProjectConfig, MarketSortMode
+  IdeSkill, Overview, LinkTarget, DownloadTask, ProjectConfig
 } from "./types";
 import { useIdeConfig } from "./useIdeConfig";
 import { useMarketConfig } from "./useMarketConfig";
@@ -14,7 +14,7 @@ import {
   isSafeRelativePath,
   getErrorMessage,
   isSafeAbsolutePath,
-  normalizeSkillName
+  parseManualSkillSource
 } from "./utils";
 
 export function useSkillsManager() {
@@ -32,7 +32,6 @@ export function useSkillsManager() {
   const total = ref(0);
   const limit = ref(20);
   const offset = ref(0);
-  const marketSortMode = ref<MarketSortMode>("default");
   const loading = ref(false);
   const installingId = ref<string | null>(null);
   const updatingId = ref<string | null>(null);
@@ -69,46 +68,11 @@ export function useSkillsManager() {
   const recentTaskStatus = ref<Record<string, "download" | "update">>({});
 
   const hasMore = computed(() => results.value.length < total.value);
-  const sortedResults = computed(() => {
-    if (marketSortMode.value === "default") {
-      return results.value;
-    }
-
-    return results.value
-      .map((skill, index) => ({ skill, index }))
-      .sort((left, right) => {
-        const leftValue =
-          marketSortMode.value === "stars_desc" ? left.skill.stars : left.skill.installs;
-        const rightValue =
-          marketSortMode.value === "stars_desc" ? right.skill.stars : right.skill.installs;
-
-        if (rightValue !== leftValue) {
-          return rightValue - leftValue;
-        }
-
-        if (right.skill.stars !== left.skill.stars) {
-          return right.skill.stars - left.skill.stars;
-        }
-
-        if (right.skill.installs !== left.skill.installs) {
-          return right.skill.installs - left.skill.installs;
-        }
-
-        return left.index - right.index;
-      })
-      .map(({ skill }) => skill);
-  });
   const localSkillNameSet = computed(() => {
     const set = new Set<string>();
     for (const skill of localSkills.value) {
-      const candidates = [
-        skill.name,
-        skill.path.split(/[\\/]/).filter(Boolean).pop() ?? ""
-      ];
-      for (const candidate of candidates) {
-        const key = normalizeSkillName(candidate);
-        if (key) set.add(key);
-      }
+      const key = skill.name.trim().toLowerCase();
+      if (key) set.add(key);
     }
     return set;
   });
@@ -118,7 +82,7 @@ export function useSkillsManager() {
     enabledMarkets,
     marketStatuses,
     loadMarketConfigs,
-    saveMarketConfigs
+    saveMarketConfigs: persistMarketConfigs
   } = useMarketConfig();
 
   const {
@@ -297,7 +261,6 @@ export function useSkillsManager() {
             installBaseDir
           }
         });
-        await scanLocalSkills();
         task.status = 'done';
         recentTaskStatus.value = {
           ...recentTaskStatus.value,
@@ -314,6 +277,7 @@ export function useSkillsManager() {
           const nextStatus = { ...recentTaskStatus.value };
           delete nextStatus[task.id];
           recentTaskStatus.value = nextStatus;
+          void scanLocalSkills(); // Properly handle async
           // Clean up timer to prevent memory leaks
           const index = timers.indexOf(timerId);
           if (index > -1) timers.splice(index, 1);
@@ -348,6 +312,47 @@ export function useSkillsManager() {
 
   async function updateSkill(skill: RemoteSkill) {
     addToDownloadQueue(skill, "update");
+  }
+
+  async function addManualSkill(sourceUrl: string, customName?: string) {
+    const parsed = parseManualSkillSource(sourceUrl);
+    if (!parsed) {
+      toast.error(t("errors.unsupportedManualUrl"));
+      return null;
+    }
+
+    const resolvedName = (customName?.trim() || parsed.inferredName || "").trim();
+    if (!resolvedName) {
+      toast.error(t("errors.manualSkillNameRequired"));
+      return null;
+    }
+
+    const remoteSkill: RemoteSkill = {
+      id: `manual:${parsed.normalizedUrl}`,
+      name: resolvedName,
+      namespace: "manual",
+      sourceUrl: parsed.normalizedUrl,
+      description: t("market.manualDescription"),
+      author: parsed.kind === "zip" ? t("market.manualSourceLabel") : "",
+      installs: 0,
+      stars: 0,
+      marketId: "manual",
+      marketLabel: t("market.manualSourceLabel")
+    };
+
+    if (localSkillNameSet.value.has(resolvedName.toLowerCase())) {
+      await updateSkill(remoteSkill);
+      return "update" as const;
+    }
+
+    await downloadSkill(remoteSkill);
+    return "download" as const;
+  }
+
+  function saveMarketConfigs(configs: Record<string, string>, enabled: Record<string, boolean>): void {
+    searchCache.clear();
+    persistMarketConfigs(configs, enabled);
+    void searchMarketplace(true, true);
   }
 
   async function scanLocalSkills() {
@@ -804,11 +809,9 @@ export function useSkillsManager() {
     activeTab,
     query,
     results,
-    sortedResults,
     total,
     limit,
     offset,
-    marketSortMode,
     loading,
     installingId,
     updatingId,
@@ -844,6 +847,7 @@ export function useSkillsManager() {
     searchMarketplace,
     downloadSkill,
     updateSkill,
+    addManualSkill,
     scanLocalSkills,
     openInstallModal,
     updateInstallTargetIde,
