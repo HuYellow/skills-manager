@@ -111,6 +111,19 @@ export function getErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
+/**
+ * Normalizes a skill name for stable matching across sources and local paths
+ */
+export function normalizeSkillName(input: string): string {
+  return decodeURIComponent(input)
+    .trim()
+    .toLowerCase()
+    .replace(/\.git$/i, "")
+    .replace(/\.zip$/i, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export type ManualSkillSourceKind = "github_repo" | "github_tree" | "zip";
 
 export type ManualSkillSource = {

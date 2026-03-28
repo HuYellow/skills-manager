@@ -83,6 +83,11 @@ export default {
     updating: "Updating...",
     source: "Source: {source}",
     loadMore: "Load More",
+    sortLabel: "Sort By",
+    sortDefault: "Default",
+    sortStars: "Stars (High to Low)",
+    sortInstalls: "Installs (High to Low)",
+    sortHint: "Reorder current results locally without triggering a new search.",
     unavailable: "Unavailable"
   },
   local: {

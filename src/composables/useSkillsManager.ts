@@ -6,7 +6,7 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useToast } from "./useToast";
 import type {
   RemoteSkill, MarketStatus, InstallResult, LocalSkill,
-  IdeSkill, Overview, LinkTarget, DownloadTask, ProjectConfig
+  IdeSkill, Overview, LinkTarget, DownloadTask, ProjectConfig, MarketSortMode
 } from "./types";
 import { useIdeConfig } from "./useIdeConfig";
 import { useMarketConfig } from "./useMarketConfig";
@@ -14,7 +14,8 @@ import {
   isSafeRelativePath,
   getErrorMessage,
   isSafeAbsolutePath,
-  parseManualSkillSource
+  parseManualSkillSource,
+  normalizeSkillName
 } from "./utils";
 
 export function useSkillsManager() {
@@ -29,6 +30,7 @@ export function useSkillsManager() {
 
   const query = ref("");
   const results = ref<RemoteSkill[]>([]);
+  const marketSortMode = ref<MarketSortMode>("default");
   const total = ref(0);
   const limit = ref(20);
   const offset = ref(0);
@@ -68,11 +70,26 @@ export function useSkillsManager() {
   const recentTaskStatus = ref<Record<string, "download" | "update">>({});
 
   const hasMore = computed(() => results.value.length < total.value);
+  const sortedResults = computed(() => {
+    if (marketSortMode.value === "default") {
+      return results.value;
+    }
+
+    const sortBy = marketSortMode.value === "stars_desc" ? "stars" : "installs";
+    return [...results.value].sort((left, right) => {
+      const diff = right[sortBy] - left[sortBy];
+      if (diff !== 0) return diff;
+      return left.name.localeCompare(right.name);
+    });
+  });
   const localSkillNameSet = computed(() => {
     const set = new Set<string>();
     for (const skill of localSkills.value) {
-      const key = skill.name.trim().toLowerCase();
-      if (key) set.add(key);
+      const nameKey = normalizeSkillName(skill.name);
+      if (nameKey) set.add(nameKey);
+
+      const pathKey = normalizeSkillName(skill.path.split(/[\\/]/).filter(Boolean).pop() ?? "");
+      if (pathKey) set.add(pathKey);
     }
     return set;
   });
@@ -340,7 +357,7 @@ export function useSkillsManager() {
       marketLabel: t("market.manualSourceLabel")
     };
 
-    if (localSkillNameSet.value.has(resolvedName.toLowerCase())) {
+    if (localSkillNameSet.value.has(normalizeSkillName(resolvedName))) {
       await updateSkill(remoteSkill);
       return "update" as const;
     }
@@ -829,6 +846,8 @@ export function useSkillsManager() {
     busy,
     busyText,
     hasMore,
+    sortedResults,
+    marketSortMode,
     localSkillNameSet,
     filteredIdeSkills,
     customIdeOptions,
