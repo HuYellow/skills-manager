@@ -52,11 +52,12 @@ export function isSafeRelativePath(input: string): boolean {
   return true;
 }
 
+
 /**
  * Checks if a path is a WSL UNC path
  * Examples: \\wsl$\Ubuntu\..., \\wsl.localhost\Ubuntu\...
  */
-export function isWslPath(input: string): boolean {
+function isWslPath(input: string): boolean {
   const trimmed = input.trim().toLowerCase();
   return trimmed.startsWith("\\\\wsl$\\") || trimmed.startsWith("\\\\wsl.localhost\\");
 }

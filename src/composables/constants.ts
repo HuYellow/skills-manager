@@ -29,10 +29,6 @@ export const STORAGE_KEYS = {
   PROJECTS: "skillsManager.projects"
 } as const;
 
-/**
- * Cache time-to-live in milliseconds (10 minutes)
- */
-export const CACHE_TTL_MS = 10 * 60 * 1000;
 
 /**
  * Default market statuses
